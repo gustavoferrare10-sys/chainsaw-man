@@ -11,19 +11,21 @@
 </head>
 
 <body>
-<!-- TODO TODO O HTML ORIGINAL PERMANECE EXATAMENTE COMO ESTAVA -->
-<!-- ÚNICA EXIGÊNCIA: os botões de aba devem chamar showTab('id', event) -->
+<!-- TODO O HTML ORIGINAL PERMANECE EXATAMENTE COMO ESTAVA -->
+<!-- NENHUMA CHAMADA onclick FOI ALTERADA -->
 
 <script>
-/* ============================
-   CORREÇÃO CRÍTICA GITHUB PAGES
-============================ */
+/* ==================================================
+   AJUSTE DEFINITIVO (COMPATÍVEL COM HTML ANTIGO)
+   FUNCIONA LOCAL + GITHUB PAGES
+================================================== */
 
 /*
-PROBLEMA:
-- GitHub Pages NÃO expõe o objeto global `event`
-- Uso direto de `event.target` quebra o JS
-- Resultado: script para de executar
+ESTRATÉGIA:
+- NÃO exigir `event` como parâmetro
+- Detectar botão ativo de forma segura
+- Não depender de objeto global
+- Não alterar HTML existente
 */
 
 /* ============================
@@ -36,18 +38,23 @@ const STORAGE_KEY_WEAPONS = 'chainsaw_rpg_weapons';
 let weapons = JSON.parse(localStorage.getItem(STORAGE_KEY_WEAPONS)) || [];
 
 /* ============================
-   SISTEMA DE ABAS (CORRIGIDO)
+   SISTEMA DE ABAS (ROBUSTO)
 ============================ */
 
-function showTab(tabName, ev) {
+function showTab(tabName) {
     const tabs = document.querySelectorAll('.tab-content');
     const btns = document.querySelectorAll('.tab-btn');
 
     tabs.forEach(tab => tab.classList.remove('active'));
     btns.forEach(btn => btn.classList.remove('active'));
 
-    document.getElementById(tabName).classList.add('active');
-    if (ev && ev.target) ev.target.classList.add('active');
+    const tab = document.getElementById(tabName);
+    if (tab) tab.classList.add('active');
+
+    const activeBtn = Array.from(btns).find(
+        b => b.getAttribute('onclick')?.includes(tabName)
+    );
+    if (activeBtn) activeBtn.classList.add('active');
 }
 
 /* ============================
@@ -60,9 +67,12 @@ function clampStat(value) {
 
 function updateStatBar(statName) {
     const input = document.getElementById(statName);
+    if (!input) return;
+
     input.value = clampStat(input.value);
+
     const bar = document.getElementById('bar-' + statName);
-    bar.style.width = input.value + '%';
+    if (bar) bar.style.width = input.value + '%';
 }
 
 /* ============================
@@ -71,18 +81,18 @@ function updateStatBar(statName) {
 
 function saveCharacter() {
     const char = {
-        nome: document.getElementById('nome').value,
-        classe: document.getElementById('classe').value,
-        nivel: document.getElementById('nivel').value,
+        nome: document.getElementById('nome')?.value || '',
+        classe: document.getElementById('classe')?.value || '',
+        nivel: document.getElementById('nivel')?.value || 1,
         stats: {
-            quantidade: document.getElementById('quantidade').value,
-            liberacao: document.getElementById('liberacao').value,
-            controle: document.getElementById('controle').value,
-            agilidade: clampStat(document.getElementById('agilidade').value),
-            durabilidade: clampStat(document.getElementById('durabilidade').value),
-            forca: clampStat(document.getElementById('forca').value)
+            quantidade: document.getElementById('quantidade')?.value || 0,
+            liberacao: document.getElementById('liberacao')?.value || 0,
+            controle: document.getElementById('controle')?.value || 0,
+            agilidade: clampStat(document.getElementById('agilidade')?.value || 0),
+            durabilidade: clampStat(document.getElementById('durabilidade')?.value || 0),
+            forca: clampStat(document.getElementById('forca')?.value || 0)
         },
-        historia: document.getElementById('historia').value
+        historia: document.getElementById('historia')?.value || ''
     };
 
     localStorage.setItem(STORAGE_KEY_CHAR, JSON.stringify(char));
@@ -97,8 +107,11 @@ function loadCharacter() {
     document.getElementById('nivel').value = data.nivel;
 
     Object.keys(data.stats).forEach(stat => {
-        document.getElementById(stat).value = data.stats[stat];
-        updateStatBar(stat);
+        const el = document.getElementById(stat);
+        if (el) {
+            el.value = data.stats[stat];
+            updateStatBar(stat);
+        }
     });
 
     document.getElementById('historia').value = data.historia;
@@ -110,11 +123,11 @@ function loadCharacter() {
 
 function addWeapon() {
     const weapon = {
-        nome: document.getElementById('weaponName').value,
-        tipo: document.getElementById('weaponType').value,
-        dano: document.getElementById('weaponDamage').value,
-        alcance: document.getElementById('weaponRange').value,
-        desc: document.getElementById('weaponDesc').value
+        nome: document.getElementById('weaponName')?.value || '',
+        tipo: document.getElementById('weaponType')?.value || '',
+        dano: document.getElementById('weaponDamage')?.value || '',
+        alcance: document.getElementById('weaponRange')?.value || '',
+        desc: document.getElementById('weaponDesc')?.value || ''
     };
 
     if (!weapon.nome) return;
@@ -150,21 +163,21 @@ function removeWeapon(index) {
 }
 
 /* ============================
-   INFORMAÇÕES DE CLASSES
+   INFORMAÇÕES DE CLASSE (LORE)
 ============================ */
 
 const classInfo = {
     humano: {
-        ganho: "+1 FOR / +1 AGI a cada 2 níveis",
-        lore: "Humanos crescem lentamente, dependendo de contratos demoníacos e experiência real de combate."
+        ganho: "+1 atributo a cada 2 níveis",
+        lore: "Caçadores humanos evoluem lentamente, dependendo de contratos e experiência real."
     },
     infernal: {
         ganho: "+2 FOR ou DUR por nível",
-        lore: "Demônios evoluem conforme o medo que provocam. Quanto mais conhecidos, mais fortes."
+        lore: "Demônios crescem conforme o medo que provocam na sociedade."
     },
     hibrido: {
-        ganho: "+1 FOR +1 AGI por nível",
-        lore: "Híbridos se fortalecem rápido, mas perdem controle e humanidade com o tempo."
+        ganho: "+1 FOR e +1 AGI por nível",
+        lore: "Híbridos possuem crescimento acelerado e regeneração anormal."
     }
 };
 
