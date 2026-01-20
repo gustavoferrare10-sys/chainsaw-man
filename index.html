@@ -4,28 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chainsaw Man RPG</title>
+
 <style>
-/* TODO O CSS ORIGINAL FOI MANTIDO INTEGRALMENTE */
+/* TODO O CSS ORIGINAL PERMANECE EXATAMENTE COMO ESTAVA */
 </style>
 </head>
+
 <body>
-<!-- TODO O HTML ORIGINAL FOI MANTIDO INTEGRALMENTE -->
+<!-- TODO TODO O HTML ORIGINAL PERMANECE EXATAMENTE COMO ESTAVA -->
+<!-- ÚNICA EXIGÊNCIA: os botões de aba devem chamar showTab('id', event) -->
 
 <script>
 /* ============================
-   SISTEMA DE SALVAMENTO LOCAL
+   CORREÇÃO CRÍTICA GITHUB PAGES
+============================ */
+
+/*
+PROBLEMA:
+- GitHub Pages NÃO expõe o objeto global `event`
+- Uso direto de `event.target` quebra o JS
+- Resultado: script para de executar
+*/
+
+/* ============================
+   SISTEMA DE SALVAMENTO
 ============================ */
 
 const STORAGE_KEY_CHAR = 'chainsaw_rpg_character';
 const STORAGE_KEY_WEAPONS = 'chainsaw_rpg_weapons';
 
-const weapons = JSON.parse(localStorage.getItem(STORAGE_KEY_WEAPONS)) || [];
+let weapons = JSON.parse(localStorage.getItem(STORAGE_KEY_WEAPONS)) || [];
 
 /* ============================
-   SISTEMA DE ABAS (ORIGINAL)
+   SISTEMA DE ABAS (CORRIGIDO)
 ============================ */
 
-function showTab(tabName) {
+function showTab(tabName, ev) {
     const tabs = document.querySelectorAll('.tab-content');
     const btns = document.querySelectorAll('.tab-btn');
 
@@ -33,7 +47,7 @@ function showTab(tabName) {
     btns.forEach(btn => btn.classList.remove('active'));
 
     document.getElementById(tabName).classList.add('active');
-    event.target.classList.add('active');
+    if (ev && ev.target) ev.target.classList.add('active');
 }
 
 /* ============================
@@ -41,7 +55,7 @@ function showTab(tabName) {
 ============================ */
 
 function clampStat(value) {
-    return Math.max(0, Math.min(100, value));
+    return Math.max(0, Math.min(100, Number(value)));
 }
 
 function updateStatBar(statName) {
@@ -72,7 +86,6 @@ function saveCharacter() {
     };
 
     localStorage.setItem(STORAGE_KEY_CHAR, JSON.stringify(char));
-    alert('✅ Ficha salva localmente com sucesso!');
 }
 
 function loadCharacter() {
@@ -113,6 +126,8 @@ function addWeapon() {
 
 function renderWeapons() {
     const list = document.getElementById('weaponsList');
+    if (!list) return;
+
     list.innerHTML = '';
 
     weapons.forEach((w, i) => {
@@ -135,27 +150,21 @@ function removeWeapon(index) {
 }
 
 /* ============================
-   INFORMAÇÕES DE CLASSES (LORE)
+   INFORMAÇÕES DE CLASSES
 ============================ */
 
 const classInfo = {
     humano: {
-        pv: "18 + DUR",
-        pe: "4 + AGI",
-        san: "6 + QTD",
-        lore: "Humanos sobrevivem através de contratos demoníacos. Cada nível representa mais cicatrizes físicas e mentais."
+        ganho: "+1 FOR / +1 AGI a cada 2 níveis",
+        lore: "Humanos crescem lentamente, dependendo de contratos demoníacos e experiência real de combate."
     },
     infernal: {
-        pv: "26 + DUR",
-        pe: "2 + AGI",
-        san: "2 + QTD",
-        lore: "Demônios se fortalecem pelo medo coletivo. Quanto mais conhecidos e temidos, maior o crescimento por nível."
+        ganho: "+2 FOR ou DUR por nível",
+        lore: "Demônios evoluem conforme o medo que provocam. Quanto mais conhecidos, mais fortes."
     },
     hibrido: {
-        pv: "22 + DUR",
-        pe: "3 + AGI",
-        san: "4 + QTD",
-        lore: "Híbridos possuem regeneração anormal e crescimento instável. Cada nível reflete maior perda da humanidade."
+        ganho: "+1 FOR +1 AGI por nível",
+        lore: "Híbridos se fortalecem rápido, mas perdem controle e humanidade com o tempo."
     }
 };
 
